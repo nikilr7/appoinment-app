@@ -9,20 +9,22 @@ import ProviderDetailsScreen from './src/screens/ProviderDetailsScreen';
 import BookingScreen from './src/screens/BookingScreen';
 import ResetPasswordScreen from './src/screens/ResetPasswordScreen';
 import AppointmentsScreen from './src/screens/AppointmentsScreen';
+import AboutScreen from './src/screens/AboutScreen';
 
 const Stack = createNativeStackNavigator();
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
+      <Stack.Navigator initialRouteName="Login" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
-        <Stack.Screen name="Home" component={ProviderListScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="Details" component={ProviderDetailsScreen} options={{ title: 'Provider Details' }} />
-        <Stack.Screen name="Booking" component={BookingScreen} options={{ title: 'Book Appointment' }} />
-        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} options={{ title: 'Reset Password' }} />
-        <Stack.Screen name="Appointments" component={AppointmentsScreen} options={{ title: 'My Appointments' }} />
+        <Stack.Screen name="Home" component={ProviderListScreen} />
+        <Stack.Screen name="Details" component={ProviderDetailsScreen} />
+        <Stack.Screen name="Booking" component={BookingScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        <Stack.Screen name="Appointments" component={AppointmentsScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
       </Stack.Navigator>
       <Toast />
     </NavigationContainer>
