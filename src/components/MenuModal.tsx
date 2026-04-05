@@ -8,23 +8,11 @@ import {
   Animated,
   TouchableWithoutFeedback,
   Platform,
+  Switch,
 } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
-const COLORS = {
-  bg: '#0D1117',
-  surface: '#161B22',
-  card: '#1C2230',
-  border: '#2D3548',
-  accent: '#3DD68C',
-  accentDim: '#1A3D2E',
-  text: '#E6EDF3',
-  textMuted: '#8B949E',
-  textFaint: '#484F58',
-  red: '#FF4757',
-  redDim: '#3D1A1E',
-};
-
-interface MenuItem {
+export interface MenuItem {
   icon: string;
   label: string;
   sublabel?: string;
@@ -39,6 +27,7 @@ interface MenuModalProps {
 }
 
 export default function MenuModal({ visible, onClose, items }: MenuModalProps) {
+  const { theme, isDark, toggleTheme } = useTheme();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-12)).current;
 
@@ -62,32 +51,62 @@ export default function MenuModal({ visible, onClose, items }: MenuModalProps) {
             <Animated.View
               style={[
                 styles.menu,
-                { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+                {
+                  backgroundColor: theme.card,
+                  borderColor: theme.border,
+                  opacity: fadeAnim,
+                  transform: [{ translateY: slideAnim }],
+                },
               ]}
             >
+              {/* Dark Mode Toggle Row */}
+              <View style={[styles.menuItem, styles.menuItemBorder, { borderBottomColor: theme.border }]}>
+                <View style={[styles.menuIconBox, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+                  <Text style={styles.menuIcon}>{isDark ? '🌙' : '☀️'}</Text>
+                </View>
+                <View style={styles.menuTextBlock}>
+                  <Text style={[styles.menuLabel, { color: theme.text }]}>Dark Mode</Text>
+                  <Text style={[styles.menuSublabel, { color: theme.textFaint }]}>
+                    {isDark ? 'Switch to light' : 'Switch to dark'}
+                  </Text>
+                </View>
+                <Switch
+                  value={isDark}
+                  onValueChange={toggleTheme}
+                  trackColor={{ false: '#CBD5E1', true: theme.accentDim }}
+                  thumbColor={isDark ? theme.accent : '#FFFFFF'}
+                  ios_backgroundColor="#CBD5E1"
+                />
+              </View>
+
+              {/* Menu Items */}
               {items.map((item, i) => (
                 <TouchableOpacity
                   key={i}
                   style={[
                     styles.menuItem,
-                    i < items.length - 1 && styles.menuItemBorder,
-                    item.danger && styles.menuItemDanger,
+                    i < items.length - 1 && [styles.menuItemBorder, { borderBottomColor: theme.border }],
+                    item.danger && { backgroundColor: theme.dangerDim },
                   ]}
                   onPress={() => { onClose(); item.onPress(); }}
                   activeOpacity={0.7}
                 >
-                  <View style={[styles.menuIconBox, item.danger && styles.menuIconBoxDanger]}>
+                  <View style={[
+                    styles.menuIconBox,
+                    { backgroundColor: theme.surface, borderColor: theme.border },
+                    item.danger && { backgroundColor: theme.dangerDim, borderColor: theme.danger + '44' },
+                  ]}>
                     <Text style={styles.menuIcon}>{item.icon}</Text>
                   </View>
                   <View style={styles.menuTextBlock}>
-                    <Text style={[styles.menuLabel, item.danger && styles.menuLabelDanger]}>
+                    <Text style={[styles.menuLabel, { color: item.danger ? theme.danger : theme.text }]}>
                       {item.label}
                     </Text>
                     {item.sublabel && (
-                      <Text style={styles.menuSublabel}>{item.sublabel}</Text>
+                      <Text style={[styles.menuSublabel, { color: theme.textFaint }]}>{item.sublabel}</Text>
                     )}
                   </View>
-                  {!item.danger && <Text style={styles.menuChevron}>›</Text>}
+                  {!item.danger && <Text style={[styles.menuChevron, { color: theme.textFaint }]}>›</Text>}
                 </TouchableOpacity>
               ))}
             </Animated.View>
@@ -107,15 +126,13 @@ const styles = StyleSheet.create({
     paddingRight: 16,
   },
   menu: {
-    width: 240,
-    backgroundColor: COLORS.card,
+    width: 256,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: COLORS.border,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 20,
     elevation: 16,
   },
@@ -123,47 +140,23 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingVertical: 13,
     gap: 12,
   },
   menuItemBorder: {
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: COLORS.border,
-  },
-  menuItemDanger: {
-    backgroundColor: COLORS.redDim,
   },
   menuIconBox: {
     width: 36,
     height: 36,
     borderRadius: 10,
-    backgroundColor: COLORS.surface,
     borderWidth: 1,
-    borderColor: COLORS.border,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  menuIconBoxDanger: {
-    backgroundColor: COLORS.redDim,
-    borderColor: COLORS.red + '44',
-  },
   menuIcon: { fontSize: 16 },
   menuTextBlock: { flex: 1, gap: 1 },
-  menuLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: COLORS.text,
-  },
-  menuLabelDanger: {
-    color: COLORS.red,
-  },
-  menuSublabel: {
-    fontSize: 11,
-    color: COLORS.textFaint,
-  },
-  menuChevron: {
-    fontSize: 18,
-    color: COLORS.textFaint,
-    lineHeight: 22,
-  },
+  menuLabel: { fontSize: 14, fontWeight: '600' },
+  menuSublabel: { fontSize: 11 },
+  menuChevron: { fontSize: 18, lineHeight: 22 },
 });

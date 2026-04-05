@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, ScrollView, TextInput as RNTextInput,
+  StyleSheet, ActivityIndicator, ScrollView, TextInput as RNTextInput, StatusBar,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
 import PasswordInput from '../components/PasswordInput';
 import PasswordStrength from '../components/PasswordStrength';
+import { useTheme } from '../context/ThemeContext';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
@@ -21,6 +22,7 @@ function maskEmail(email: string): string {
 }
 
 export default function ResetPasswordScreen({ navigation }: Props) {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [generatedOtp, setGeneratedOtp] = useState('');
@@ -111,17 +113,21 @@ export default function ResetPasswordScreen({ navigation }: Props) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-      <View style={styles.card}>
-        <Text style={styles.title}>Reset Password</Text>
-        <Text style={styles.subtitle}>Enter your email to receive an OTP</Text>
+    <ScrollView
+      contentContainerStyle={[styles.scroll, { backgroundColor: theme.bg }]}
+      keyboardShouldPersistTaps="handled"
+    >
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
+      <View style={[styles.card, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.title, { color: theme.text }]}>Reset Password</Text>
+        <Text style={[styles.subtitle, { color: theme.textMuted }]}>Enter your email to receive an OTP</Text>
 
-        {/* Email */}
-        <Text style={styles.label}>Email</Text>
+        <Text style={[styles.label, { color: theme.text }]}>Email</Text>
         <View style={styles.emailRow}>
           <TextInput
-            style={[styles.emailInput, emailError ? styles.inputError : null]}
+            style={[styles.emailInput, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.inputText }, !!emailError && { borderColor: theme.danger }]}
             placeholder="Enter your email"
+            placeholderTextColor={theme.placeholder}
             value={email}
             onChangeText={setEmail}
             onBlur={() => setTouched(t => ({ ...t, email: true }))}
@@ -131,25 +137,25 @@ export default function ResetPasswordScreen({ navigation }: Props) {
             editable={!otpSent}
           />
           <TouchableOpacity
-            style={[styles.otpBtn, (!email || !EMAIL_REGEX.test(email)) && styles.otpBtnDisabled]}
+            style={[styles.otpBtn, { backgroundColor: theme.accent }, (!email || !EMAIL_REGEX.test(email)) && { opacity: 0.5 }]}
             onPress={handleSendOtp}
             disabled={!email || !EMAIL_REGEX.test(email)}
           >
-            <Text style={styles.otpBtnText}>{otpSent ? 'Resend' : 'Send OTP'}</Text>
+            <Text style={[styles.otpBtnText, { color: theme.accentText }]}>{otpSent ? 'Resend' : 'Send OTP'}</Text>
           </TouchableOpacity>
         </View>
-        {!!emailError && <Text style={styles.errorText}>{emailError}</Text>}
+        {!!emailError && <Text style={[styles.errorText, { color: theme.danger }]}>{emailError}</Text>}
 
         {otpSent && (
           <>
-            <Text style={styles.maskedHint}>OTP sent to {maskEmail(email)}</Text>
+            <Text style={[styles.maskedHint, { color: theme.accent }]}>OTP sent to {maskEmail(email)}</Text>
 
-            {/* OTP Input */}
-            <Text style={styles.label}>Enter OTP</Text>
+            <Text style={[styles.label, { color: theme.text }]}>Enter OTP</Text>
             <TextInput
               ref={otpRef}
-              style={[styles.input, otpError ? styles.inputError : null]}
+              style={[styles.input, { backgroundColor: theme.inputBg, borderColor: theme.inputBorder, color: theme.inputText }, !!otpError && { borderColor: theme.danger }]}
               placeholder="4-digit OTP"
+              placeholderTextColor={theme.placeholder}
               value={otp}
               onChangeText={v => setOtp(v.replace(/\D/g, '').slice(0, 4))}
               onBlur={() => setTouched(t => ({ ...t, otp: true }))}
@@ -158,17 +164,15 @@ export default function ResetPasswordScreen({ navigation }: Props) {
               returnKeyType="next"
               onSubmitEditing={() => newPwdRef.current?.focus()}
             />
-            {!!otpError && <Text style={styles.errorText}>{otpError}</Text>}
+            {!!otpError && <Text style={[styles.errorText, { color: theme.danger }]}>{otpError}</Text>}
 
-            {/* Resend countdown */}
             <TouchableOpacity onPress={handleResendOtp} disabled={resendTimer > 0}>
-              <Text style={[styles.resendText, resendTimer > 0 && styles.resendDisabled]}>
+              <Text style={[styles.resendText, { color: theme.accent }, resendTimer > 0 && { color: theme.textFaint }]}>
                 {resendTimer > 0 ? `Resend OTP in ${resendTimer}s` : 'Resend OTP'}
               </Text>
             </TouchableOpacity>
 
-            {/* New Password */}
-            <Text style={styles.label}>New Password</Text>
+            <Text style={[styles.label, { color: theme.text }]}>New Password</Text>
             <PasswordInput
               ref={newPwdRef}
               placeholder="Enter new password"
@@ -183,8 +187,7 @@ export default function ResetPasswordScreen({ navigation }: Props) {
             />
             <PasswordStrength password={newPassword} />
 
-            {/* Confirm Password */}
-            <Text style={styles.label}>Confirm New Password</Text>
+            <Text style={[styles.label, { color: theme.text }]}>Confirm New Password</Text>
             <PasswordInput
               ref={confirmRef}
               placeholder="Confirm new password"
@@ -200,19 +203,17 @@ export default function ResetPasswordScreen({ navigation }: Props) {
 
             {/* Submit */}
             <TouchableOpacity
-              style={[styles.button, (!otp || !newPassword || !confirmPassword) && styles.buttonDisabled]}
+              style={[styles.button, { backgroundColor: theme.accent }, (!otp || !newPassword || !confirmPassword) && { opacity: 0.5 }]}
               onPress={handleResetPassword}
               disabled={!otp || !newPassword || !confirmPassword || loading}
             >
-              {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={styles.buttonText}>Reset Password</Text>}
+              {loading ? <ActivityIndicator color="#fff" /> : <Text style={[styles.buttonText, { color: theme.accentText }]}>Reset Password</Text>}
             </TouchableOpacity>
           </>
         )}
 
         <TouchableOpacity onPress={() => navigation.navigate('Login')} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back to Login</Text>
+          <Text style={[styles.backText, { color: theme.accent }]}>← Back to Login</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -220,42 +221,26 @@ export default function ResetPasswordScreen({ navigation }: Props) {
 }
 
 const styles = StyleSheet.create({
-  scroll: { flexGrow: 1, justifyContent: 'center', backgroundColor: '#f0f4f8', padding: 20 },
+  scroll: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   card: {
-    backgroundColor: '#fff', borderRadius: 16, padding: 24,
+    borderRadius: 16, padding: 24, borderWidth: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1, shadowRadius: 12, elevation: 6,
+    shadowOpacity: 0.08, shadowRadius: 12, elevation: 6,
   },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 6, color: '#1a1a2e' },
-  subtitle: { fontSize: 13, color: '#888', textAlign: 'center', marginBottom: 24 },
-  label: { fontSize: 14, fontWeight: '600', color: '#333', marginBottom: 5, marginTop: 8 },
-  input: {
-    borderWidth: 1, borderColor: '#ddd', borderRadius: 10,
-    padding: 13, fontSize: 15, backgroundColor: '#f9f9f9',
-    marginBottom: 4, color: '#222',
-  },
-  inputError: { borderColor: '#e74c3c' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 6 },
+  subtitle: { fontSize: 13, textAlign: 'center', marginBottom: 24 },
+  label: { fontSize: 14, fontWeight: '600', marginBottom: 5, marginTop: 8 },
+  input: { borderWidth: 1, borderRadius: 10, padding: 13, fontSize: 15, marginBottom: 4 },
   emailRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
-  emailInput: {
-    flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 10,
-    padding: 13, fontSize: 15, backgroundColor: '#f9f9f9', color: '#222',
-  },
-  otpBtn: {
-    backgroundColor: '#007AFF', borderRadius: 10,
-    paddingVertical: 13, paddingHorizontal: 14,
-  },
-  otpBtnDisabled: { backgroundColor: '#a0c4ff' },
-  otpBtnText: { color: '#fff', fontWeight: '600', fontSize: 13 },
-  errorText: { color: '#e74c3c', fontSize: 12, marginBottom: 6, marginLeft: 2 },
-  maskedHint: { color: '#27ae60', fontSize: 12, marginBottom: 10, marginTop: 2 },
-  resendText: { color: '#007AFF', fontSize: 13, textAlign: 'right', marginBottom: 14 },
-  resendDisabled: { color: '#aaa' },
-  button: {
-    backgroundColor: '#007AFF', borderRadius: 10,
-    padding: 14, alignItems: 'center', marginTop: 8,
-  },
-  buttonDisabled: { backgroundColor: '#a0c4ff' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  emailInput: { flex: 1, borderWidth: 1, borderRadius: 10, padding: 13, fontSize: 15 },
+  otpBtn: { borderRadius: 10, paddingVertical: 13, paddingHorizontal: 14 },
+  otpBtnText: { fontWeight: '600', fontSize: 13 },
+  errorText: { fontSize: 12, marginBottom: 6, marginLeft: 2 },
+  maskedHint: { fontSize: 12, marginBottom: 10, marginTop: 2 },
+  resendText: { fontSize: 13, textAlign: 'right', marginBottom: 14 },
+  resendDisabled: { },
+  button: { borderRadius: 10, padding: 14, alignItems: 'center', marginTop: 8 },
+  buttonText: { fontSize: 16, fontWeight: '600' },
   backBtn: { marginTop: 20, alignItems: 'center' },
-  backText: { color: '#007AFF', fontSize: 14 },
+  backText: { fontSize: 14 },
 });

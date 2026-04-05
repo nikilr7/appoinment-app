@@ -1,17 +1,20 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, TextInput as RNTextInput,
+  StyleSheet, ActivityIndicator, StatusBar,
+  TextInput as RNTextInput,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import Toast from 'react-native-toast-message';
+import { useTheme } from '../context/ThemeContext';
 
 type Props = { navigation: NativeStackNavigationProp<any> };
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen({ navigation }: Props) {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
@@ -22,12 +25,10 @@ export default function LoginScreen({ navigation }: Props) {
 
   const emailError = touched.email && (!email ? 'Email is required' : !EMAIL_REGEX.test(email) ? 'Please enter a valid email' : '');
   const passwordError = touched.password && !password ? 'Password is required' : '';
-
   const isDisabled = !email || !password || !EMAIL_REGEX.test(email);
 
   const handleLogin = async () => {
     setTouched({ email: true, password: true });
-
     if (!email || !EMAIL_REGEX.test(email)) {
       Toast.show({ type: 'error', text1: 'Please enter a valid email' });
       return;
@@ -36,16 +37,13 @@ export default function LoginScreen({ navigation }: Props) {
       Toast.show({ type: 'error', text1: 'Password is required' });
       return;
     }
-
     setLoading(true);
     const stored = await AsyncStorage.getItem('user');
-
     if (!stored) {
       setLoading(false);
       Toast.show({ type: 'error', text1: 'No account found', text2: 'Please register first.' });
       return;
     }
-
     const user = JSON.parse(stored);
     if (user.email === email && user.password === password) {
       await AsyncStorage.setItem('loggedIn', 'true');
@@ -57,16 +55,19 @@ export default function LoginScreen({ navigation }: Props) {
     }
   };
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Welcome Back</Text>
-      <Text style={styles.subtitle}>Login to your account</Text>
+  const s = makeStyles(theme);
 
-      {/* Email */}
-      <Text style={styles.label}>Email</Text>
+  return (
+    <View style={s.container}>
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
+      <Text style={s.title}>Welcome Back</Text>
+      <Text style={s.subtitle}>Login to your account</Text>
+
+      <Text style={s.label}>Email</Text>
       <TextInput
-        style={[styles.input, emailError ? styles.inputError : null]}
+        style={[s.input, !!emailError && s.inputError]}
         placeholder="Enter your email"
+        placeholderTextColor={theme.placeholder}
         value={email}
         onChangeText={setEmail}
         onBlur={() => setTouched(t => ({ ...t, email: true }))}
@@ -75,15 +76,15 @@ export default function LoginScreen({ navigation }: Props) {
         keyboardType="email-address"
         returnKeyType="next"
       />
-      {!!emailError && <Text style={styles.errorText}>{emailError}</Text>}
+      {!!emailError && <Text style={s.errorText}>{emailError}</Text>}
 
-      {/* Password */}
-      <Text style={styles.label}>Password</Text>
-      <View style={[styles.inputRow, passwordError ? styles.inputError : null]}>
+      <Text style={s.label}>Password</Text>
+      <View style={[s.inputRow, !!passwordError && s.inputError]}>
         <TextInput
           ref={passwordRef}
-          style={styles.inputFlex}
+          style={s.inputFlex}
           placeholder="Enter your password"
+          placeholderTextColor={theme.placeholder}
           value={password}
           onChangeText={setPassword}
           onBlur={() => setTouched(t => ({ ...t, password: true }))}
@@ -91,60 +92,61 @@ export default function LoginScreen({ navigation }: Props) {
           returnKeyType="done"
           onSubmitEditing={handleLogin}
         />
-        <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)} style={styles.eyeBtn}>
-          <Text style={styles.eyeIcon}>{isPasswordVisible ? '🙈' : '👁️'}</Text>
+        <TouchableOpacity onPress={() => setIsPasswordVisible(v => !v)} style={s.eyeBtn}>
+          <Text style={s.eyeIcon}>{isPasswordVisible ? '🙈' : '👁️'}</Text>
         </TouchableOpacity>
       </View>
-      {!!passwordError && <Text style={styles.errorText}>{passwordError}</Text>}
+      {!!passwordError && <Text style={s.errorText}>{passwordError}</Text>}
 
-      {/* Forgot Password */}
       <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
-        <Text style={styles.forgotText}>Forgot Password?</Text>
+        <Text style={s.forgotText}>Forgot Password?</Text>
       </TouchableOpacity>
 
-      {/* Login Button */}
       <TouchableOpacity
-        style={[styles.button, isDisabled && styles.buttonDisabled]}
+        style={[s.button, isDisabled && s.buttonDisabled]}
         onPress={handleLogin}
         disabled={isDisabled || loading}
       >
-        {loading
-          ? <ActivityIndicator color="#fff" />
-          : <Text style={styles.buttonText}>Login</Text>}
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={s.buttonText}>Login</Text>}
       </TouchableOpacity>
 
-      <Text style={styles.link} onPress={() => navigation.navigate('Register')}>
-        Don't have an account? <Text style={styles.linkBold}>Register</Text>
+      <Text style={s.link} onPress={() => navigation.navigate('Register')}>
+        Don't have an account? <Text style={s.linkBold}>Register</Text>
       </Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
-  title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 6 },
-  subtitle: { fontSize: 14, color: '#888', textAlign: 'center', marginBottom: 28 },
-  label: { fontSize: 14, fontWeight: '600', marginBottom: 4, color: '#333' },
-  input: {
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8,
-    padding: 12, marginBottom: 4, fontSize: 15,
-  },
-  inputRow: {
-    flexDirection: 'row', alignItems: 'center',
-    borderWidth: 1, borderColor: '#ccc', borderRadius: 8, marginBottom: 4,
-  },
-  inputFlex: { flex: 1, padding: 12, fontSize: 15 },
-  inputError: { borderColor: '#e74c3c' },
-  eyeBtn: { paddingHorizontal: 12 },
-  eyeIcon: { fontSize: 18 },
-  errorText: { color: '#e74c3c', fontSize: 12, marginBottom: 8 },
-  forgotText: { color: '#007AFF', textAlign: 'right', marginBottom: 16, marginTop: 4, fontSize: 13 },
-  button: {
-    backgroundColor: '#007AFF', borderRadius: 8,
-    padding: 14, alignItems: 'center', marginTop: 4,
-  },
-  buttonDisabled: { backgroundColor: '#a0c4ff' },
-  buttonText: { color: '#fff', fontSize: 16, fontWeight: '600' },
-  link: { marginTop: 20, textAlign: 'center', color: '#555' },
-  linkBold: { color: '#007AFF', fontWeight: '600' },
-});
+function makeStyles(theme: ReturnType<typeof import('../context/ThemeContext').useTheme>['theme']) {
+  return StyleSheet.create({
+    container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: theme.bg },
+    title: { fontSize: 28, fontWeight: 'bold', textAlign: 'center', marginBottom: 6, color: theme.text },
+    subtitle: { fontSize: 14, color: theme.textMuted, textAlign: 'center', marginBottom: 28 },
+    label: { fontSize: 14, fontWeight: '600', marginBottom: 4, color: theme.text },
+    input: {
+      borderWidth: 1, borderColor: theme.inputBorder, borderRadius: 8,
+      padding: 12, marginBottom: 4, fontSize: 15,
+      backgroundColor: theme.inputBg, color: theme.inputText,
+    },
+    inputRow: {
+      flexDirection: 'row', alignItems: 'center',
+      borderWidth: 1, borderColor: theme.inputBorder,
+      borderRadius: 8, marginBottom: 4,
+      backgroundColor: theme.inputBg,
+    },
+    inputFlex: { flex: 1, padding: 12, fontSize: 15, color: theme.inputText },
+    inputError: { borderColor: theme.danger },
+    eyeBtn: { paddingHorizontal: 12 },
+    eyeIcon: { fontSize: 18 },
+    errorText: { color: theme.danger, fontSize: 12, marginBottom: 8 },
+    forgotText: { color: theme.accent, textAlign: 'right', marginBottom: 16, marginTop: 4, fontSize: 13 },
+    button: {
+      backgroundColor: theme.accent, borderRadius: 8,
+      padding: 14, alignItems: 'center', marginTop: 4,
+    },
+    buttonDisabled: { opacity: 0.5 },
+    buttonText: { color: theme.accentText, fontSize: 16, fontWeight: '600' },
+    link: { marginTop: 20, textAlign: 'center', color: theme.textMuted },
+    linkBold: { color: theme.accent, fontWeight: '600' },
+  });
+}

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MenuModal from '../components/MenuModal';
+import { useTheme } from '../context/ThemeContext';
 
 const COLORS = {
   bg: '#0D1117',
@@ -46,50 +47,47 @@ const providers = [
 
 const ALL_CATEGORIES = ['All', ...Array.from(new Set(providers.map(p => p.category)))];
 
-function StarRating({ rating }: { rating: number }) {
+function StarRating({ rating, theme }: { rating: number; theme: any }) {
   return (
     <View style={styles.starRow}>
       <Text style={styles.starIcon}>★</Text>
-      <Text style={styles.ratingText}>{rating.toFixed(1)}</Text>
+      <Text style={[styles.ratingText, { color: theme.text }]}>{rating.toFixed(1)}</Text>
     </View>
   );
 }
 
 function ProviderCard({ item, onPress }: { item: typeof providers[0]; onPress: () => void }) {
+  const { theme } = useTheme();
   const spec = SPECIALTY_COLORS[item.category] ?? SPECIALTY_COLORS.General;
   return (
-    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.75}>
+    <TouchableOpacity style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]} onPress={onPress} activeOpacity={0.75}>
       <View style={styles.cardInner}>
         <View style={styles.avatarWrapper}>
           <Image source={{ uri: item.image }} style={styles.avatar} />
-          <View style={[styles.availDot, { backgroundColor: item.available ? COLORS.accent : COLORS.textFaint }]} />
+          <View style={[styles.availDot, { backgroundColor: item.available ? theme.accent : theme.textFaint, borderColor: theme.card }]} />
         </View>
-
         <View style={styles.cardBody}>
           <View style={styles.cardTopRow}>
-            <Text style={styles.providerName} numberOfLines={1}>{item.name}</Text>
+            <Text style={[styles.providerName, { color: theme.text }]} numberOfLines={1}>{item.name}</Text>
             <View style={[styles.badge, { backgroundColor: spec.bg }]}>
               <View style={[styles.badgeDot, { backgroundColor: spec.dot }]} />
               <Text style={[styles.badgeText, { color: spec.text }]}>{item.category}</Text>
             </View>
           </View>
-
-          <Text style={styles.serviceLabel}>{item.service}</Text>
-
+          <Text style={[styles.serviceLabel, { color: theme.textMuted }]}>{item.service}</Text>
           <View style={styles.cardMeta}>
-            <StarRating rating={item.rating} />
-            <Text style={styles.metaDivider}>·</Text>
-            <Text style={styles.metaText}>{item.reviews} reviews</Text>
-            <Text style={styles.metaDivider}>·</Text>
-            <Text style={styles.metaText}>{item.experience}</Text>
+            <StarRating rating={item.rating} theme={theme} />
+            <Text style={[styles.metaDivider, { color: theme.textFaint }]}>·</Text>
+            <Text style={[styles.metaText, { color: theme.textMuted }]}>{item.reviews} reviews</Text>
+            <Text style={[styles.metaDivider, { color: theme.textFaint }]}>·</Text>
+            <Text style={[styles.metaText, { color: theme.textMuted }]}>{item.experience}</Text>
           </View>
-
           <View style={styles.cardFooter}>
-            <Text style={[styles.availText, { color: item.available ? COLORS.accent : COLORS.textFaint }]}>
+            <Text style={[styles.availText, { color: item.available ? theme.accent : theme.textFaint }]}>
               {item.available ? 'Available today' : 'Unavailable'}
             </Text>
-            <View style={styles.bookBtn}>
-              <Text style={styles.bookBtnText}>Book →</Text>
+            <View style={[styles.bookBtn, { backgroundColor: theme.accentDim, borderColor: theme.accent }]}>
+              <Text style={[styles.bookBtnText, { color: theme.accent }]}>Book →</Text>
             </View>
           </View>
         </View>
@@ -99,6 +97,7 @@ function ProviderCard({ item, onPress }: { item: typeof providers[0]; onPress: (
 }
 
 export default function ProviderListScreen({ navigation }: any) {
+  const { theme } = useTheme();
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [menuVisible, setMenuVisible] = useState(false);
@@ -114,6 +113,18 @@ export default function ProviderListScreen({ navigation }: any) {
       label: 'Appointments',
       sublabel: 'View & manage bookings',
       onPress: () => navigation.navigate('Appointments'),
+    },
+    {
+      icon: '🕐',
+      label: 'History',
+      sublabel: 'Past & completed appointments',
+      onPress: () => navigation.navigate('History'),
+    },
+    {
+      icon: '🔔',
+      label: 'Reminder Settings',
+      sublabel: 'Configure alert timing',
+      onPress: () => navigation.navigate('ReminderSettings'),
     },
     {
       icon: 'ℹ️',
@@ -139,38 +150,38 @@ export default function ProviderListScreen({ navigation }: any) {
   }, [search, activeCategory]);
 
   return (
-    <SafeAreaView style={styles.safe}>
-      <StatusBar barStyle="light-content" backgroundColor={COLORS.bg} />
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.bg }]}>
+      <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
 
       {/* Top Nav Bar */}
-      <View style={styles.navbar}>
+      <View style={[styles.navbar, { borderBottomColor: theme.border }]}>
         <View style={styles.navLeft}>
-          <Text style={styles.navEyebrow}>Find your</Text>
-          <Text style={styles.navTitle}>Service Provider</Text>
+          <Text style={[styles.navEyebrow, { color: theme.textFaint }]}>Find your</Text>
+          <Text style={[styles.navTitle, { color: theme.text }]}>Service Provider</Text>
         </View>
         <TouchableOpacity
-          style={styles.menuBtn}
+          style={[styles.menuBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}
           onPress={() => setMenuVisible(true)}
           activeOpacity={0.7}
         >
-          <Text style={styles.menuBtnIcon}>☰</Text>
+          <Text style={[styles.menuBtnIcon, { color: theme.text }]}>☰</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search */}
-      <View style={styles.searchWrapper}>
-        <Text style={styles.searchIcon}>⌕</Text>
+      <View style={[styles.searchWrapper, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+        <Text style={[styles.searchIcon, { color: theme.textFaint }]}>⌕</Text>
         <TextInput
-          style={styles.searchInput}
+          style={[styles.searchInput, { color: theme.text }]}
           placeholder="Search by name or specialty…"
-          placeholderTextColor={COLORS.textFaint}
+          placeholderTextColor={theme.placeholder}
           value={search}
           onChangeText={setSearch}
           returnKeyType="search"
         />
         {search.length > 0 && (
           <TouchableOpacity onPress={() => setSearch('')}>
-            <Text style={styles.clearIcon}>✕</Text>
+            <Text style={[styles.clearIcon, { color: theme.textFaint }]}>✕</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -194,11 +205,19 @@ export default function ProviderListScreen({ navigation }: any) {
           return (
             <TouchableOpacity
               key={cat}
-              style={[styles.filterChip, active && styles.filterChipActive]}
+              style={[
+                styles.filterChip,
+                { backgroundColor: theme.surface, borderColor: theme.border },
+                active && { backgroundColor: theme.accentDim, borderColor: theme.accent },
+              ]}
               onPress={() => setActiveCategory(cat)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.filterChipText, active && styles.filterChipTextActive]}>
+              <Text style={[
+                styles.filterChipText,
+                { color: theme.textMuted },
+                active && { color: theme.accent },
+              ]}>
                 {cat}
               </Text>
             </TouchableOpacity>
@@ -208,7 +227,7 @@ export default function ProviderListScreen({ navigation }: any) {
 
       {/* Result Count */}
       <View style={styles.resultRow}>
-        <Text style={styles.resultText}>
+        <Text style={[styles.resultText, { color: theme.textFaint }]}>
           {filtered.length} provider{filtered.length !== 1 ? 's' : ''} found
         </Text>
       </View>
@@ -226,10 +245,10 @@ export default function ProviderListScreen({ navigation }: any) {
           />
         )}
         ListEmptyComponent={
-          <View style={styles.emptyState}>
+          <View style={[styles.emptyState]}>
             <Text style={styles.emptyIcon}>⊘</Text>
-            <Text style={styles.emptyTitle}>No providers found</Text>
-            <Text style={styles.emptySubtitle}>Try adjusting your search or filters</Text>
+            <Text style={[styles.emptyTitle, { color: theme.textMuted }]}>No providers found</Text>
+            <Text style={[styles.emptySubtitle, { color: theme.textFaint }]}>Try adjusting your search or filters</Text>
           </View>
         }
       />
