@@ -1,13 +1,19 @@
 import notifee, { AndroidImportance, TriggerType } from '@notifee/react-native';
 
-const CHANNEL_ID = 'medibook_reminders';
+// WARNING: Never change this value after release — changing it creates a new
+// channel and loses all user-defined notification preferences (mute, sound, etc.)
+const CHANNEL_ID = 'appointment_reminders' as const;
 
 export async function requestNotificationPermission(): Promise<boolean> {
   const settings = await notifee.requestPermission();
   return settings.authorizationStatus >= 1;
 }
 
+// Creates the channel only once — skips if it already exists to preserve
+// any user-defined settings (importance, sound, vibration, etc.)
 async function ensureChannel() {
+  const existing = await notifee.getChannel(CHANNEL_ID);
+  if (existing) return;
   await notifee.createChannel({
     id: CHANNEL_ID,
     name: 'Appointment Reminders',
@@ -16,10 +22,6 @@ async function ensureChannel() {
   });
 }
 
-/**
- * Schedule a local notification at triggerDate.
- * Returns the notification id (use to cancel later).
- */
 export async function scheduleReminderNotification(
   appointmentId: string,
   providerName: string,
@@ -27,7 +29,6 @@ export async function scheduleReminderNotification(
   triggerDate: Date,
 ): Promise<string> {
   await ensureChannel();
-
   const id = await notifee.createTriggerNotification(
     {
       id: `reminder_${appointmentId}`,
@@ -39,25 +40,20 @@ export async function scheduleReminderNotification(
         pressAction: { id: 'default' },
         smallIcon: 'ic_launcher',
       },
-      ios: {
-        sound: 'default',
-      },
+      ios: { sound: 'default' },
     },
     {
       type: TriggerType.TIMESTAMP,
       timestamp: triggerDate.getTime(),
     },
   );
-
   return id;
 }
 
-/** Cancel a previously scheduled notification by appointment id. */
 export async function cancelReminderNotification(appointmentId: string): Promise<void> {
   await notifee.cancelNotification(`reminder_${appointmentId}`);
 }
 
-/** Display an immediate in-app notification (used as fallback when app is open). */
 export async function showImmediateReminder(
   providerName: string,
   timeSlot: string,
@@ -65,7 +61,7 @@ export async function showImmediateReminder(
   await ensureChannel();
   await notifee.displayNotification({
     title: '🔔 Appointment Reminder',
-    body: `Your appointment with ${providerName} is at ${timeSlot} — coming up soon!`,
+    body: `Your appointment with ${providerName} is at ${timeSlot}`,
     android: {
       channelId: CHANNEL_ID,
       importance: AndroidImportance.HIGH,
