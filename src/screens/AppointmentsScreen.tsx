@@ -187,7 +187,15 @@ export default function AppointmentsScreen({ navigation }: any) {
       <StatusBar barStyle={theme.statusBar} backgroundColor={theme.bg} />
 
       <View style={styles.header}>
-        <View>
+        <TouchableOpacity
+          style={[styles.backBtn, { backgroundColor: theme.surface, borderColor: theme.border }]}
+          onPress={() => navigation.navigate('Home')}
+          activeOpacity={0.7}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Text style={[styles.backIcon, { color: theme.text }]}>‹</Text>
+        </TouchableOpacity>
+        <View style={styles.headerCenter}>
           <Text style={[styles.headerEyebrow, { color: theme.textFaint }]}>DASHBOARD</Text>
           <Text style={[styles.headerTitle, { color: theme.text }]}>My Appointments</Text>
         </View>
@@ -228,10 +236,13 @@ export default function AppointmentsScreen({ navigation }: any) {
 
 const styles = StyleSheet.create({
   root: { flex: 1 },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', paddingHorizontal: 24, paddingTop: 56, paddingBottom: 20 },
+  header: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 20, paddingTop: 56, paddingBottom: 20, gap: 12 },
+  backBtn: { width: 40, height: 40, borderRadius: 13, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
+  backIcon: { fontSize: 26, lineHeight: 30, marginTop: -2 },
+  headerCenter: { flex: 1 },
   headerEyebrow: { fontSize: 10, letterSpacing: 3, marginBottom: 4 },
   headerTitle: { fontSize: 28, fontWeight: '700', letterSpacing: -0.5 },
-  headerAction: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  headerAction: { width: 42, height: 42, borderRadius: 21, borderWidth: 1, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
   headerActionIcon: { fontSize: 20, lineHeight: 26 },
   statsRow: { flexDirection: 'row', gap: 10, paddingHorizontal: 24, marginBottom: 20 },
   statPill: { flex: 1, borderWidth: 1, borderRadius: 14, paddingVertical: 14, alignItems: 'center', gap: 2 },
